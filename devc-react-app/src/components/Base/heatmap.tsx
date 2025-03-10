@@ -1,11 +1,10 @@
 import Map from "@arcgis/core/Map";
 import "@arcgis/core/assets/esri/themes/light/main.css";
-// import esriConfig from "@arcgis/core/config";
+import esriConfig from "@arcgis/core/config";
 import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer.js";
 import HeatmapRenderer from "@arcgis/core/renderers/HeatmapRenderer";
 import MapView from "@arcgis/core/views/MapView";
 import React, { useEffect, useRef, useState } from "react";
-// import dataJson from "../../assets/data.json";
 import geoJson from "../../assets/geo.json";
 
 interface HeatmapMapPolygonProps {
@@ -14,58 +13,28 @@ interface HeatmapMapPolygonProps {
 
 const HeatmapMap: React.FC<HeatmapMapPolygonProps> = ({ countryColors }) => { 
     const mapRef = useRef<HTMLDivElement>(null);
-    // esriConfig.assetsPath = '/assets/arcgis';
+    esriConfig.assetsPath = '/assets/arcgis';
     const [dataBlobUrl, setDataBlobUrl] = useState<string | null>(null);
-    const [data, setData] = useState<Record<string, number>>({});
-    const abortController = useRef<AbortController | null>(null);
-
-    useEffect(() => {
-        async function fetchData() {
-            const controller = new AbortController();
-            abortController.current = controller;
-
-            try {
-                const response = await fetch("/data.json", { signal: controller.signal });
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                const jsonData = await response.json();
-                setData(jsonData);
-            } catch (error: unknown) {
-                if (error instanceof Error && error.name !== "AbortError") {
-                    console.error("Error loading data.json:", error);
-                }
-            }
-        }
-
-        fetchData();
-        return () => abortController.current?.abort();
-    }, []);
-
-    // useEffect(() => {
-    //     async function fetchData() {
-    //         try {
-    //             // ✅ Fetch External JSON (data.json)
-    //             const response = await fetch("/data.json");
-    //             const data = await response.json();
-
-    //             // ✅ Convert JSON to a Blob
-    //             const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
-    //             const blobUrl = URL.createObjectURL(blob);
-
-    //             console.log("Data Blob URL:", blobUrl);
-    //             setDataBlobUrl(blobUrl); // ✅ Store Blob URL in State
-    //         } catch (error) {
-    //             console.error("Error loading data.json:", error);
-    //         }
-    //     }
-
-    //     fetchData();
-    // }, []);
 
     useEffect(() => {
         if (!mapRef.current || !dataBlobUrl) return;
+        async function fetchData() {
+            try {
+                // ✅ Fetch External JSON (data.json)
+                const response = await fetch("/data.json");
+                const data = await response.json();
 
-        abortController.current = new AbortController();  // ✅ Create an abort controller
-        // const signal = abortController.current.signal;
+                // ✅ Convert JSON to a Blob
+                const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+                const blobUrl = URL.createObjectURL(blob);
+
+                console.log("Data Blob URL:", blobUrl);
+                setDataBlobUrl(blobUrl); // ✅ Store Blob URL in State
+            } catch (error) {
+                console.error("Error loading data.json:", error);
+            }
+        }
+        fetchData();
 
         const heatmapRenderer = new HeatmapRenderer({
             field: "value",
@@ -87,6 +56,7 @@ const HeatmapMap: React.FC<HeatmapMapPolygonProps> = ({ countryColors }) => {
             type: "application/json"
         });
         const url = URL.createObjectURL(blob);
+
         const geoJSONLayer = new GeoJSONLayer({
             // url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Countries_(Generalized)/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson",
             url: url,
@@ -103,7 +73,7 @@ const HeatmapMap: React.FC<HeatmapMapPolygonProps> = ({ countryColors }) => {
                     feature.attributes.data_value = externalData[countryName] || 0;  // ✅ Inject Data
                 });
 
-                // geoJSONLayer.applyEdits({ updateFeatures: results.features });  // ✅ Apply Changes
+                geoJSONLayer.applyEdits({ updateFeatures: results.features });  // ✅ Apply Changes
                 geoJSONLayer.renderer = heatmapRenderer;  // ✅ Apply Heatmap Rendering
             });
         });
@@ -139,7 +109,6 @@ const HeatmapMap: React.FC<HeatmapMapPolygonProps> = ({ countryColors }) => {
         }).catch((err) => console.log(err));
 
         return () => {
-            abortController.current?.abort();  // ✅ Abort previous requests on unmount
             if (view) view.destroy();
         };
     }, [countryColors, dataBlobUrl]);
