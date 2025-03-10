@@ -4,7 +4,7 @@ import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import MapView from "@arcgis/core/views/MapView";
 import React, { useEffect, useRef } from "react";
-import geoJson from "./geo.json";
+import geoJson from "../../assets/geo.json";
 
 import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer.js";
 

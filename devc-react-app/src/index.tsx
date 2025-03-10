@@ -1,4 +1,4 @@
-import HeatmapMapPolygon from './components/Base/heatmap_polygon';
+import HeatmapMapPolygon from './components/Base/heatmap';
 
 export default function Base() {
     const countryColors: { [country: string]: [number, number, number, number] } = {
