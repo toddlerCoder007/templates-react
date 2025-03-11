@@ -12,7 +12,7 @@ interface HeatmapMapPolygonProps {
     countryColors: { [key: string]: [number, number, number, number] };
 }
 
-const HeatmapMapPolygon: React.FC<HeatmapMapPolygonProps> = ({ countryColors }) => { 
+const HeatmapMap: React.FC<HeatmapMapPolygonProps> = ({ countryColors }) => { 
     const mapRef = useRef<HTMLDivElement>(null);
     // esriConfig.assetsPath = '/assets/arcgis';
 
@@ -87,4 +87,4 @@ const HeatmapMapPolygon: React.FC<HeatmapMapPolygonProps> = ({ countryColors }) 
 
 };
 
-export default HeatmapMapPolygon;
+export default HeatmapMap;
