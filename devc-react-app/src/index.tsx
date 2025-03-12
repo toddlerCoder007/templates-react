@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
+import testCoordinates from './assets/testCoordinates';
 import { countCountries, generateHeatmapColors } from './components/Algo/findCountry';
 import HeatmapMap from './components/Base/heatmap';
-import testCoordinates from './components/Base/testCoordinates';
 
 export default function Base() {
     console.log("Test Coordinates:", testCoordinates);
