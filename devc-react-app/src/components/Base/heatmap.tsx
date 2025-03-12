@@ -1,11 +1,12 @@
 import Map from "@arcgis/core/Map";
 import "@arcgis/core/assets/esri/themes/light/main.css";
-// import esriConfig from "@arcgis/core/config";
-import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer.js";
-import HeatmapRenderer from "@arcgis/core/renderers/HeatmapRenderer";
+import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer";
+import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import MapView from "@arcgis/core/views/MapView";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import geoJson from "../../assets/geo.json";
+
+import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer.js";
 
 interface HeatmapMapProps {
     countryColors: { [key: string]: [number, number, number, number] };
@@ -14,41 +15,19 @@ interface HeatmapMapProps {
 const HeatmapMap: React.FC<HeatmapMapProps> = ({ countryColors }) => { 
     const mapRef = useRef<HTMLDivElement>(null);
     // esriConfig.assetsPath = '/assets/arcgis';
-    const [dataBlobUrl, setDataBlobUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!mapRef.current || !dataBlobUrl) return;
-        async function fetchData() {
-            try {
-                // ✅ Fetch External JSON (data.json)
-                const response = await fetch("/data.json");
-                const data = await response.json();
+        if (!mapRef.current) return;
 
-                // ✅ Convert JSON to a Blob
-                const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
-                const blobUrl = URL.createObjectURL(blob);
+        const uniqueValueInfos = Object.entries(countryColors).map(([country, color]) => ({
+            value: country,
+            symbol: new SimpleFillSymbol({ color })
+        }));
 
-                console.log("Data Blob URL:", blobUrl);
-                setDataBlobUrl(blobUrl); // ✅ Store Blob URL in State
-            } catch (error) {
-                console.error("Error loading data.json:", error);
-            }
-        }
-        fetchData();
-
-        const heatmapRenderer = new HeatmapRenderer({
-            field: "value",
-            colorStops: [
-                { ratio: 0, color: "rgba(255, 255, 255, 0)" },  // Transparent (0)
-                { ratio: 0.1, color: "rgba(0, 255, 255, 0.8)" },  // Light Blue (10)
-                { ratio: 0.3, color: "rgba(0, 191, 255, 0.8)" },  // Cyan (30)
-                { ratio: 0.5, color: "rgba(0, 128, 255, 0.8)" },  // Deep Blue (50)
-                { ratio: 0.7, color: "rgba(255, 165, 0, 0.8)" },  // Orange (70)
-                { ratio: 0.9, color: "rgba(255, 69, 0, 0.9)" },  // Dark Orange (90)
-                { ratio: 1, color: "rgba(255, 0, 0, 1)" }  // 🔥 Red (100)
-            ],
-            maxDensity: 100,
-            minDensity: 0
+        const countryRenderer = new UniqueValueRenderer({
+            field: "COUNTRY",
+            uniqueValueInfos: uniqueValueInfos,
+            defaultSymbol: new SimpleFillSymbol({ color: [200, 200, 200, 0.5] })
         });
 
         const geojson = geoJson;
@@ -56,40 +35,18 @@ const HeatmapMap: React.FC<HeatmapMapProps> = ({ countryColors }) => {
             type: "application/json"
         });
         const url = URL.createObjectURL(blob);
-
         const geoJSONLayer = new GeoJSONLayer({
             // url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Countries_(Generalized)/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson",
             url: url,
+            renderer: countryRenderer
         });
-
-        geoJSONLayer.when(() => {
-            geoJSONLayer.queryFeatures().then(async (results) => {
-                // ✅ Fetch JSON Data from Blob URL
-                const response = await fetch(dataBlobUrl);
-                const externalData = await response.json();
-
-                results.features.forEach((feature) => {
-                    const countryName = feature.attributes.COUNTRY;
-                    feature.attributes.data_value = externalData[countryName] || 0;  // ✅ Inject Data
-                });
-
-                geoJSONLayer.applyEdits({ updateFeatures: results.features });  // ✅ Apply Changes
-                geoJSONLayer.renderer = heatmapRenderer;  // ✅ Apply Heatmap Rendering
-            });
-        });
-
-        // const basemap = new Basemap({
-        //     baseLayers: [
-        //         new WMTSLayer({
-        //             url: 'https://localhost:8080/styles/basic-preview/wmts.xml'
-        //         })
-        //     ]
-        // })
 
         const map = new Map({
             basemap: "dark-gray",
             layers: [geoJSONLayer]
-        });
+        })
+
+        map.add(geoJSONLayer);
 
         const view = new MapView({
             container: mapRef.current,
@@ -111,7 +68,7 @@ const HeatmapMap: React.FC<HeatmapMapProps> = ({ countryColors }) => {
         return () => {
             if (view) view.destroy();
         };
-    }, [countryColors, dataBlobUrl]);
+    }, [countryColors]);
 
     const mapStyles: React.CSSProperties = {
         width: "1920px",
