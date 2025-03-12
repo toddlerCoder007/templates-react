@@ -1,5 +1,4 @@
 import * as turf from '@turf/turf';
-import { useEffect, useMemo } from "react";
 import geoJsonData from "../../assets/geo.json";
 
 interface GeoJson {
@@ -72,24 +71,52 @@ const findCountry = (lat: number, lon: number): string => {
     return "Unknown"; // If no country matches
 };
 
-interface CountryFinderProps {
-    lat: number;
-    lon: number;
-}
+const countCountries = (coordinates: { lat: number; lon: number }[]) => {
+    const countryCounts: { [country: string]: number } = {};
+    for (const { lat, lon } of coordinates) {
+        const country = findCountry(lat, lon);
+        countryCounts[country] = (countryCounts[country] || 0) + 1;
+    }
 
-const CountryFinder: React.FC<CountryFinderProps> = ({ lat, lon }) => {
-    const country = useMemo(() => findCountry(lat, lon), [lat, lon]);
-
-    useEffect(() => {
-        console.log(`🔍 Searching for country at Lat: ${lat}, Lon: ${lon} → Found: ${country}`);
-    }, [lat, lon, country]);
-
-    return (
-        <div>
-            <strong>Country:</strong> {country} <br />
-            <strong>Coordinates:</strong> [{lat}, {lon}]
-        </div>
-    );
+    return countryCounts;
 };
 
-export default CountryFinder;
+const hslToRgba = (h: number, s: number, l: number, a: number): [number, number, number, number] => {
+    s /= 100;
+    l /= 100;
+
+    const k = (n: number) => (n + h / 30) % 12;
+    const f = (n: number) => l - s * Math.max(Math.min(k(n) - 3, 9 - k(n), 1), -1);
+
+    const r = Math.min(255, Math.max(0, Math.round(f(0) * 255)));
+    const g = Math.min(255, Math.max(0, Math.round(f(8) * 255)));
+    const b = Math.min(255, Math.max(0, Math.round(f(4) * 255)));
+
+    return [r, g, b, a]; // Alpha stays unchanged
+};
+
+
+const generateHeatmapColors = (countryCounts: { [country: string]: number }) => {
+    const maxCount = Math.max(...Object.values(countryCounts), 1); // Avoid division by zero
+
+    const countryColors: { [country: string]: [number, number, number, number] } = {};
+
+    for (const feature of geoJson.features) {
+        const country = feature.properties.COUNTRY;
+        const count = countryCounts[country] || 0;
+
+        if (count === 0) {
+            countryColors[country] = [211, 211, 211, 0.3]; // Light gray for zero occurrences
+        } else {
+            // Scale Hue from 60° (yellow) to 0° (red) based on count
+            const hue = 60 - (count / maxCount) * 60;
+            const opacity = 0.3 + (count / maxCount) * 0.7;
+
+            countryColors[country] = hslToRgba(hue, 100, 50, opacity);
+        }
+    }
+
+    return countryColors;
+};
+
+export { countCountries, findCountry, generateHeatmapColors };

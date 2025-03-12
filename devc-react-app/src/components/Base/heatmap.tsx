@@ -1,19 +1,19 @@
 import Map from "@arcgis/core/Map";
 import "@arcgis/core/assets/esri/themes/light/main.css";
-import esriConfig from "@arcgis/core/config";
+// import esriConfig from "@arcgis/core/config";
 import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer.js";
 import HeatmapRenderer from "@arcgis/core/renderers/HeatmapRenderer";
 import MapView from "@arcgis/core/views/MapView";
 import React, { useEffect, useRef, useState } from "react";
 import geoJson from "../../assets/geo.json";
 
-interface HeatmapMapPolygonProps {
+interface HeatmapMapProps {
     countryColors: { [key: string]: [number, number, number, number] };
 }
 
-const HeatmapMap: React.FC<HeatmapMapPolygonProps> = ({ countryColors }) => { 
+const HeatmapMap: React.FC<HeatmapMapProps> = ({ countryColors }) => { 
     const mapRef = useRef<HTMLDivElement>(null);
-    esriConfig.assetsPath = '/assets/arcgis';
+    // esriConfig.assetsPath = '/assets/arcgis';
     const [dataBlobUrl, setDataBlobUrl] = useState<string | null>(null);
 
     useEffect(() => {
