@@ -1,5 +1,5 @@
 import * as turf from '@turf/turf';
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import geoJsonData from "../src/assets/geo.json";
 import testCoordinates from './components/Base/testCoordinates';
 
@@ -73,8 +73,8 @@ export default function Base() {
 
         return (
             <div>
-                {country ? `Country: ${country}` : 'Unknown country'}
-                {'\nLat: '}{lat} {'Lon: '}{lon}
+                {country ? `Country: ${country}` : 'Unknown country'} {'\n'}
+                {'['}{lat} {', '} {lon}{']'}
             </div>
         );
     };
