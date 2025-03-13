@@ -1,4 +1,3 @@
-import * as turf from '@turf/turf';
 import geoJsonData from "../../assets/geo.json";
 
 interface GeoJson {
@@ -23,63 +22,63 @@ interface GeoJson {
 
 const geoJson: GeoJson = geoJsonData as GeoJson;
 
-const handlePolygon = (point: GeoJSON.Feature<GeoJSON.Point>, feature: GeoJson['features'][0]): string | null => {
-    try {
-        const polygon = turf.polygon([feature.geometry.coordinates[0] as number[][]]);
-        if (turf.booleanPointInPolygon(point, polygon)) {
-            return feature.properties.COUNTRY;
-        }
-    } catch (error) {
-        console.error("Error processing Polygon:", error);
-    }
-    return null;
-};
+// const handlePolygon = (point: GeoJSON.Feature<GeoJSON.Point>, feature: GeoJson['features'][0]): string | null => {
+//     try {
+//         const polygon = turf.polygon([feature.geometry.coordinates[0] as number[][]]);
+//         if (turf.booleanPointInPolygon(point, polygon)) {
+//             return feature.properties.COUNTRY;
+//         }
+//     } catch (error) {
+//         console.error("Error processing Polygon:", error);
+//     }
+//     return null;
+// };
 
-const handleMultiPolygon = (point: GeoJSON.Feature<GeoJSON.Point>, feature: GeoJson['features'][0]): string | null => {
-    try {
-        for (const polygonCoords of feature.geometry.coordinates as number[][][][]) {
-            const polygon = turf.polygon(polygonCoords);
-            if (turf.booleanPointInPolygon(point, polygon)) {
-                return feature.properties.COUNTRY;
-            }
-        }
-    } catch (error) {
-        console.error("Error processing MultiPolygon:", error);
-    }
-    return null;
-};
+// const handleMultiPolygon = (point: GeoJSON.Feature<GeoJSON.Point>, feature: GeoJson['features'][0]): string | null => {
+//     try {
+//         for (const polygonCoords of feature.geometry.coordinates as number[][][][]) {
+//             const polygon = turf.polygon(polygonCoords);
+//             if (turf.booleanPointInPolygon(point, polygon)) {
+//                 return feature.properties.COUNTRY;
+//             }
+//         }
+//     } catch (error) {
+//         console.error("Error processing MultiPolygon:", error);
+//     }
+//     return null;
+// };
 
-const findCountry = (lat: number, lon: number): string => {
-    const point = turf.point([lon, lat]);
+// const findCountry = (lat: number, lon: number): string => {
+//     const point = turf.point([lon, lat]);
 
-    for (const feature of geoJson.features) {
-        if (!feature.geometry?.coordinates) {
-            console.warn("Skipping invalid geometry:", feature);
-            continue;
-        }
+//     for (const feature of geoJson.features) {
+//         if (!feature.geometry?.coordinates) {
+//             console.warn("Skipping invalid geometry:", feature);
+//             continue;
+//         }
 
-        let country: string | null = null;
-        if (feature.geometry.type === "Polygon") {
-            country = handlePolygon(point, feature);
-        } else if (feature.geometry.type === "MultiPolygon") {
-            country = handleMultiPolygon(point, feature);
-        }
+//         let country: string | null = null;
+//         if (feature.geometry.type === "Polygon") {
+//             country = handlePolygon(point, feature);
+//         } else if (feature.geometry.type === "MultiPolygon") {
+//             country = handleMultiPolygon(point, feature);
+//         }
 
-        if (country) return country;
-    }
+//         if (country) return country;
+//     }
 
-    return "Unknown"; // If no country matches
-};
+//     return "Unknown"; // If no country matches
+// };
 
-const countCountries = (coordinates: { lat: number; lon: number }[]) => {
-    const countryCounts: { [country: string]: number } = {};
-    for (const { lat, lon } of coordinates) {
-        const country = findCountry(lat, lon);
-        countryCounts[country] = (countryCounts[country] || 0) + 1;
-    }
+// const countCountries = (coordinates: { lat: number; lon: number }[]) => {
+//     const countryCounts: { [country: string]: number } = {};
+//     for (const { lat, lon } of coordinates) {
+//         const country = findCountry(lat, lon);
+//         countryCounts[country] = (countryCounts[country] || 0) + 1;
+//     }
 
-    return countryCounts;
-};
+//     return countryCounts;
+// };
 
 const hslToRgba = (h: number, s: number, l: number, a: number): [number, number, number, number] => {
     s /= 100;
@@ -95,9 +94,20 @@ const hslToRgba = (h: number, s: number, l: number, a: number): [number, number,
     return [r, g, b, a]; // Alpha stays unchanged
 };
 
-
 const generateHeatmapColors = (countryCounts: { [country: string]: number }) => {
-    const maxCount = Math.max(...Object.values(countryCounts), 1); // Avoid division by zero
+    // if ("Unknown" in countryCounts) {
+    //     console.log("Unknown Country:", countryCounts["Unknown"]);
+    // }
+
+    // // Filter out "Unknown" before computing maxCount
+    // const validCountryCounts = Object.entries(countryCounts)
+    //     .filter(([country]) => country !== "Unknown")
+    //     .map(([, count]) => count);
+
+    // Ensure maxCount is at least 1 to avoid division errors
+    // const maxCount = validCountryCounts.length > 0 ? Math.max(...validCountryCounts, 1) : 1;
+
+    const maxCount = Math.max(...Object.values(countryCounts),1);
 
     const countryColors: { [country: string]: [number, number, number, number] } = {};
 
@@ -119,4 +129,5 @@ const generateHeatmapColors = (countryCounts: { [country: string]: number }) => 
     return countryColors;
 };
 
-export { countCountries, findCountry, generateHeatmapColors };
+export default generateHeatmapColors;
+
