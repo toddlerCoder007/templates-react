@@ -1,40 +1,70 @@
 import Map from "@arcgis/core/Map";
 import "@arcgis/core/assets/esri/themes/light/main.css";
-import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer";
+import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer.js";
+import SimpleRenderer from "@arcgis/core/renderers/SimpleRenderer.js";
+import ColorVariable from "@arcgis/core/renderers/visualVariables/ColorVariable.js";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import MapView from "@arcgis/core/views/MapView";
 import React, { useEffect, useRef } from "react";
-import geoJson from "../../assets/geo.json";
+import geoJsonDataRaw from "../../assets/geo.json";
+import countryCounts from "../../assets/mockInputs";
+import GeoJson from "../interfaces/geojsonInterface";
 
-import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer.js";
-
-interface HeatmapMapProps {
-    countryColors: { [key: string]: [number, number, number, number] };
-}
-
-const HeatmapMap: React.FC<HeatmapMapProps> = ({ countryColors }) => { 
+const HeatmapMap: React.FC = () => { 
     const mapRef = useRef<HTMLDivElement>(null);
     // esriConfig.assetsPath = '/assets/arcgis';
+
+    // const { VITE_MAP_DEFAULT_LAT, VITE_MAP_DEFAULT_LON, VITE_MAP_DEFAULT_SCALE } = import.meta.env;
+
+    const geoJsonData: GeoJson = geoJsonDataRaw as GeoJson;
+    for (const feature of geoJsonData.features) {
+        const country = feature.properties.COUNTRY;
+        feature.properties.Incidents = countryCounts[country];
+    };
+
+    const blob = new Blob([JSON.stringify(geoJsonData)], {
+        type: "application/json"
+    });
+    const url = URL.createObjectURL(blob);
 
     useEffect(() => {
         if (!mapRef.current) return;
 
-        const uniqueValueInfos = Object.entries(countryColors).map(([country, color]) => ({
-            value: country,
-            symbol: new SimpleFillSymbol({ color })
-        }));
-
-        const countryRenderer = new UniqueValueRenderer({
-            field: "COUNTRY",
-            uniqueValueInfos: uniqueValueInfos,
-            defaultSymbol: new SimpleFillSymbol({ color: [200, 200, 200, 0.5] })
+        const colorVisVar = new ColorVariable ({
+            field: "Incidents",
+            stops: [{
+                value: 0,
+                color: [0, 255, 0, 0.5]
+            },
+            {
+                value: 25,
+                color: [173, 255, 47, 0.5]
+            },
+            {
+                value: 50,
+                color: [255, 255, 0, 0.5]
+            },
+            {
+                value: 80,
+                color: [255, 0, 0, 0.5]
+            }],
         });
 
-        const geojson = geoJson;
-        const blob = new Blob([JSON.stringify(geojson)], {
-            type: "application/json"
-        });
-        const url = URL.createObjectURL(blob);
+        const countryRenderer = new SimpleRenderer({
+            symbol: new SimpleFillSymbol({
+                outline: {
+                    color: "lightgray",
+                    width: 0.5
+                }
+            }),
+            visualVariables: [colorVisVar],
+        })
+
+        // const maxIncidentCount = 0;
+        // Object.entries(countryCounts).forEach(([country, count], index) => {
+        //     console.log(`Element at index ${index}: ${country} has count ${count}`);
+        // });
+
         const geoJSONLayer = new GeoJSONLayer({
             // url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Countries_(Generalized)/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson",
             url: url,
@@ -68,7 +98,7 @@ const HeatmapMap: React.FC<HeatmapMapProps> = ({ countryColors }) => {
         return () => {
             if (view) view.destroy();
         };
-    }, [countryColors]);
+    });
 
     const mapStyles: React.CSSProperties = {
         width: "1920px",
