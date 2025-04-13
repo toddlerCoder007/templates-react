@@ -6,4 +6,4 @@ COPY . .
 RUN npm ci
 
 EXPOSE 5173
-RUN npm run build
+RUN npm run build && npm start

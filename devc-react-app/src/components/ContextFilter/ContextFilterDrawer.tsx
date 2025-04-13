@@ -11,10 +11,10 @@ export default function ContextFilterDrawer({ isOpen, onClose }: { isOpen: boole
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'))
     const [regions, setRegions] = useState<string[]>([])
-    const [badBuys, setBadBuys] = useState<string[]>([])
+    const [badGuys, setBadGuys] = useState<string[]>([])
 
     const regionOptions = ['North', 'South', 'East', 'West']
-    const badBuyOptions = ['Incorrect Item', 'Damaged', 'Expired', 'Unwanted']
+    const badGuyOptions = ['Hales', 'Cinderella Stepmother', 'Bertie', 'Bertie 2.0', 'Bertie 3.0', 'Bertie 4.0', 'Bertie 5.0', 'Bertie 6.0']
 
     const updateDateRange = (range: string) => {
         setDateRange(range)
@@ -40,7 +40,7 @@ export default function ContextFilterDrawer({ isOpen, onClose }: { isOpen: boole
     const resetFilters = () => {
         updateDateRange('30')
         setRegions([])
-        setBadBuys([])
+        setBadGuys([])
     }
 
     return (
@@ -68,10 +68,10 @@ export default function ContextFilterDrawer({ isOpen, onClose }: { isOpen: boole
 
                 <CheckboxFilterSection
                     title="Bad Buy Reasons"
-                    options={badBuyOptions}
-                    selected={badBuys}
-                    onSelectAll={() => handleSelectAll(badBuys, setBadBuys, badBuyOptions)}
-                    onToggle={(val) => toggleCheckbox(badBuys, setBadBuys, val)}
+                    options={badGuyOptions}
+                    selected={badGuys}
+                    onSelectAll={() => handleSelectAll(badGuys, setBadGuys, badGuyOptions)}
+                    onToggle={(val) => toggleCheckbox(badGuys, setBadGuys, val)}
                 />
 
                 <div className={styles.footer}>
@@ -80,7 +80,7 @@ export default function ContextFilterDrawer({ isOpen, onClose }: { isOpen: boole
                         <button onClick={onClose} className={styles.cancel}>Cancel</button>
                         <button
                             onClick={() => {
-                                console.log({ dateRange, startDate, endDate, regions, badBuys })
+                                console.log({ dateRange, startDate, endDate, regions, badGuys })
                                 onClose()
                             }}
                             className={styles.apply}
