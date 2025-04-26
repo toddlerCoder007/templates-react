@@ -14,7 +14,7 @@ export default function Base() {
 
     return (
         <>
-            {/* MUI AppBar with Toolbar */}
+            MUI AppBar with Toolbar
             <AppBar position="sticky">
                 <Toolbar>
                     {/* Hamburger Menu Button inside the Toolbar */}
@@ -34,6 +34,7 @@ export default function Base() {
 
             {/* Context Filter Drawer */}
             <ContextFilter isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+            {/* <PieChart /> */}
         </>
     );
 }
