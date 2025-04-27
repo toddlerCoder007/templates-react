@@ -1,17 +1,13 @@
-import CancelIcon from '@mui/icons-material/Cancel';
 import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import { Box, Grid, IconButton, TextField, Typography } from '@mui/material';
+import { Box, Button, Grid, IconButton, TextField, Typography } from '@mui/material';
 import React, { useState } from 'react';
 
 interface EditableBoxProps {
     title: string;
     text: string;
-    width: string;
-    height: string;
 }
 
-const EditableBox: React.FC<EditableBoxProps> = ({ title, text, width, height }) => {
+const EditableBox: React.FC<EditableBoxProps> = ({ title, text }) => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [currentText, setCurrentText] = useState(text);
     const [originalText, setOriginalText] = useState(text);
@@ -33,10 +29,9 @@ const EditableBox: React.FC<EditableBoxProps> = ({ title, text, width, height })
     return (
         <Box
             sx={{
-                width,
-                height,
-                border: '1px solid #ccc',
-                borderRadius: '8px',
+                width: '100%',
+                height: '100%',
+                border: 'none', // Remove border of the entire container
                 padding: 2,
                 display: 'flex',
                 flexDirection: 'column',
@@ -46,12 +41,12 @@ const EditableBox: React.FC<EditableBoxProps> = ({ title, text, width, height })
                 <Typography variant="h6">{title}</Typography>
                 {isEditMode ? (
                     <Box>
-                        <IconButton onClick={handleSaveClick}>
-                            <SaveIcon />
-                        </IconButton>
-                        <IconButton onClick={handleCancelClick}>
-                            <CancelIcon />
-                        </IconButton>
+                        <Button onClick={handleSaveClick}>
+                            <Typography variant="h6">Save</Typography>
+                        </Button>
+                        <Button onClick={handleCancelClick}>
+                            <Typography variant="h6">Cancel</Typography>
+                        </Button>
                     </Box>
                 ) : (
                     <IconButton onClick={handleEditClick}>
@@ -60,18 +55,41 @@ const EditableBox: React.FC<EditableBoxProps> = ({ title, text, width, height })
                 )}
             </Grid>
 
-            <Box mt={2}>
+            <Box mt={2} sx={{ flex: 1 }}>
                 {isEditMode ? (
                     <TextField
-                        value={currentText}
+                        value={currentText} // This should be linked to currentText
                         onChange={(e) => setCurrentText(e.target.value)}
                         multiline
                         fullWidth
-                        rows={4}
                         variant="outlined"
+                        sx={{
+                            height: '100%',
+                            backgroundColor: 'lightgray',
+                            '& .MuiOutlinedInput-root': {
+                                height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'flex-start', // Align content to the top
+                                '&:focus': {
+                                    border: 'none', // Remove border on focus
+                                },
+                            },
+                            '& textarea': {
+                                height: '100%', // Ensure the textarea fills the container
+                                alignItems: 'flex-start', // Ensure the text aligns at the top
+                            },
+                        }}
                     />
                 ) : (
-                    <Typography variant="body1">{currentText}</Typography>
+                    <Typography
+                        variant="body1"
+                        sx={{
+                            whiteSpace: 'pre-line', // Ensures newlines are respected
+                        }}
+                    >
+                        {originalText}
+                    </Typography>
                 )}
             </Box>
         </Box>
