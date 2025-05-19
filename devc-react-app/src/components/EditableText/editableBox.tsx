@@ -1,16 +1,43 @@
 import EditIcon from '@mui/icons-material/Edit';
 import { Box, Button, Grid, IconButton, TextField, Typography } from '@mui/material';
-import React, { useState } from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+
+interface AssessmentResponse {
+    machineAssessment: string;
+    userAssessment: string;
+}
 
 interface EditableBoxProps {
     title: string;
-    text: string;
 }
 
-const EditableBox: React.FC<EditableBoxProps> = ({ title, text }) => {
+const EditableBox: React.FC<EditableBoxProps> = ({ title }) => {
     const [isEditMode, setIsEditMode] = useState(false);
-    const [currentText, setCurrentText] = useState(text);
-    const [originalText, setOriginalText] = useState(text);
+    const [machineSummary, setMachineSummary] = useState('');
+    const [userSummary, setUserSummary] = useState('');
+    const [currentText, setCurrentText] = useState('');
+    const [originalText, setOriginalText] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch data on mount
+    useEffect(() => {
+        axios
+            .get<AssessmentResponse>('/api/assessment')
+            .then((res) => {
+                const { machineAssessment, userAssessment } = res.data;
+                setMachineSummary(machineAssessment);
+                setUserSummary(userAssessment);
+
+                const displayText = userAssessment ?? machineAssessment;
+                setCurrentText(displayText);
+                setOriginalText(displayText);
+            })
+            .catch(() => setError('Failed to fetch summary'))
+            .finally(() => setLoading(false));
+    }, []);
 
     const handleEditClick = () => {
         setIsEditMode(true);
@@ -18,20 +45,31 @@ const EditableBox: React.FC<EditableBoxProps> = ({ title, text }) => {
 
     const handleCancelClick = () => {
         setIsEditMode(false);
-        setCurrentText(originalText); // Revert to the original text
+        setCurrentText(originalText);
     };
 
     const handleSaveClick = () => {
-        setIsEditMode(false);
-        setOriginalText(currentText); // Save the current text as the original text
+        setSaving(true);
+        axios
+            .post('/api/assessment', { userAssessment: currentText.trim() })
+            .then(() => {
+                setIsEditMode(false);
+                setUserSummary(currentText.trim());
+                setOriginalText(currentText.trim());
+            })
+            .catch(() => setError('Failed to save summary'))
+            .finally(() => setSaving(false));
     };
+
+    if (loading) return <Typography>Loading...</Typography>;
+    if (error) return <Typography color="error">{error}</Typography>;
 
     return (
         <Box
             sx={{
                 width: '100%',
                 height: '100%',
-                border: 'none', // Remove border of the entire container
+                border: 'none',
                 padding: 2,
                 display: 'flex',
                 flexDirection: 'column',
@@ -41,8 +79,8 @@ const EditableBox: React.FC<EditableBoxProps> = ({ title, text }) => {
                 <Typography variant="h6">{title}</Typography>
                 {isEditMode ? (
                     <Box>
-                        <Button onClick={handleSaveClick}>
-                            <Typography variant="h6">Save</Typography>
+                        <Button onClick={handleSaveClick} disabled={saving}>
+                            <Typography variant="h6">{saving ? 'Saving...' : 'Save'}</Typography>
                         </Button>
                         <Button onClick={handleCancelClick}>
                             <Typography variant="h6">Cancel</Typography>
@@ -58,7 +96,7 @@ const EditableBox: React.FC<EditableBoxProps> = ({ title, text }) => {
             <Box mt={2} sx={{ flex: 1 }}>
                 {isEditMode ? (
                     <TextField
-                        value={currentText} // This should be linked to currentText
+                        value={currentText}
                         onChange={(e) => setCurrentText(e.target.value)}
                         multiline
                         fullWidth
@@ -70,23 +108,18 @@ const EditableBox: React.FC<EditableBoxProps> = ({ title, text }) => {
                                 height: '100%',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                justifyContent: 'flex-start', // Align content to the top
-                                '&:focus': {
-                                    border: 'none', // Remove border on focus
-                                },
+                                justifyContent: 'flex-start',
                             },
                             '& textarea': {
-                                height: '100%', // Ensure the textarea fills the container
-                                alignItems: 'flex-start', // Ensure the text aligns at the top
+                                height: '100%',
+                                alignItems: 'flex-start',
                             },
                         }}
                     />
                 ) : (
                     <Typography
                         variant="body1"
-                        sx={{
-                            whiteSpace: 'pre-line', // Ensures newlines are respected
-                        }}
+                        sx={{ whiteSpace: 'pre-line' }}
                     >
                         {originalText}
                     </Typography>
