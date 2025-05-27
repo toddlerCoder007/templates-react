@@ -1,5 +1,5 @@
 import React from 'react';
-import PageWithFilter from './pages/FilterPage';
+import RegionCountrySelector from './components/RegionCountrySelector';
 
 const App: React.FC = () => {
 
@@ -7,7 +7,8 @@ const App: React.FC = () => {
     <>
       {/* <DateFilterComponent /> */}
       {/* <DrawerWithDiscardModal /> */}
-      <PageWithFilter />
+      {/* <PageWithFilter /> */}
+      <RegionCountrySelector />
     </>
 
   );
