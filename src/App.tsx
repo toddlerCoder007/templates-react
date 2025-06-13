@@ -1,5 +1,6 @@
 import React from 'react';
-import RegionCountrySelector from './components/RegionCountrySelector';
+import { sampleItems } from './assets/items';
+import PaginatedCardList from './components/PaginatedCards/PaginatedCardList';
 
 const App: React.FC = () => {
 
@@ -8,7 +9,8 @@ const App: React.FC = () => {
       {/* <DateFilterComponent /> */}
       {/* <DrawerWithDiscardModal /> */}
       {/* <PageWithFilter /> */}
-      <RegionCountrySelector />
+      {/* <RegionCountrySelector /> */}
+      <PaginatedCardList items={sampleItems} />
     </>
 
   );
